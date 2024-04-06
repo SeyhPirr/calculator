@@ -1,20 +1,15 @@
 import 'package:calculator/button_values.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 
-class CalculatorScreen extends StatefulWidget {
+class CalculatorScreen extends HookWidget {
   const CalculatorScreen({super.key});
 
   @override
-  State<CalculatorScreen> createState() => _CalculatorScreenState();
-}
-
-class _CalculatorScreenState extends State<CalculatorScreen> {
-  String number1 = ""; // . 0-9
-  String operand = ""; // + - * /
-  String number2 = ""; // . 0-9
-
-  @override
   Widget build(BuildContext context) {
+    final number1 = useState("");
+    final operand = useState("");
+    final number2 = useState("");
     final screenSize = MediaQuery.of(context).size;
     return Scaffold(
       body: SafeArea(
@@ -29,9 +24,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                   alignment: Alignment.bottomRight,
                   padding: const EdgeInsets.all(16),
                   child: Text(
-                    "$number1$operand$number2".isEmpty
+                    "${number1.value}${operand.value}${number2.value}".isEmpty
                         ? "0"
-                        : "$number1$operand$number2",
+                        : "${number1.value}${operand.value}${number2.value}",
                     style: const TextStyle(
                       fontSize: 48,
                       fontWeight: FontWeight.bold,
@@ -51,7 +46,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                           ? screenSize.width / 2
                           : (screenSize.width / 4),
                       height: screenSize.width / 5,
-                      child: buildButton(value),
+                      child: buildButton(value, number1, operand, number2),
                     ),
                   )
                   .toList(),
@@ -62,7 +57,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     );
   }
 
-  Widget buildButton(value) {
+  Widget buildButton(value, ValueNotifier<String> number1,
+      ValueNotifier<String> operand, ValueNotifier<String> number2) {
     return Padding(
       padding: const EdgeInsets.all(4.0),
       child: Material(
@@ -75,7 +71,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
           borderRadius: BorderRadius.circular(100),
         ),
         child: InkWell(
-          onTap: () => onBtnTap(value),
+          onTap: () => onBtnTap(value, number1, operand, number2),
           child: Center(
             child: Text(
               value,
@@ -91,42 +87,44 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   }
 
   // ########
-  void onBtnTap(String value) {
+  void onBtnTap(String value, ValueNotifier<String> number1,
+      ValueNotifier<String> operand, ValueNotifier<String> number2) {
     if (value == Btn.del) {
-      delete();
+      delete(number1, operand, number2);
       return;
     }
 
     if (value == Btn.clr) {
-      clearAll();
+      clearAll(number1, operand, number2);
       return;
     }
 
     if (value == Btn.per) {
-      convertToPercentage();
+      convertToPercentage(number1, operand, number2);
       return;
     }
 
     if (value == Btn.calculate) {
-      calculate();
+      calculate(number1, operand, number2);
       return;
     }
 
-    appendValue(value);
+    appendValue(value, number1, operand, number2);
   }
 
   // ##############
   // calculates the result
-  void calculate() {
-    if (number1.isEmpty) return;
-    if (operand.isEmpty) return;
-    if (number2.isEmpty) return;
+  void calculate(ValueNotifier<String> number1, ValueNotifier<String> operand,
+      ValueNotifier<String> number2) {
+    if (number1.value.isEmpty) return;
+    if (operand.value.isEmpty) return;
+    if (number2.value.isEmpty) return;
 
-    final double num1 = double.parse(number1);
-    final double num2 = double.parse(number2);
+    final double num1 = double.parse(number1.value);
+    final double num2 = double.parse(number2.value);
 
     var result = 0.0;
-    switch (operand) {
+    switch (operand.value) {
       case Btn.add:
         result = num1 + num2;
         break;
@@ -142,102 +140,99 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
       default:
     }
 
-    setState(() {
-      number1 = result.toStringAsPrecision(3);
+    number1.value = result.toStringAsPrecision(3);
 
-      if (number1.endsWith(".0")) {
-        number1 = number1.substring(0, number1.length - 2);
-      }
+    if (number1.value.endsWith(".0")) {
+      number1.value = number1.value.substring(0, number1.value.length - 2);
+    }
 
-      operand = "";
-      number2 = "";
-    });
+    operand.value = "";
+    number2.value = "";
   }
 
   // ##############
   // converts output to %
-  void convertToPercentage() {
+  void convertToPercentage(ValueNotifier<String> number1,
+      ValueNotifier<String> operand, ValueNotifier<String> number2) {
     // ex: 434+324
-    if (number1.isNotEmpty && operand.isNotEmpty && number2.isNotEmpty) {
+    if (number1.value.isNotEmpty &&
+        operand.value.isNotEmpty &&
+        number2.value.isNotEmpty) {
       // calculate before conversion
-      calculate();
+      calculate(number1, operand, number2);
     }
 
-    if (operand.isNotEmpty) {
+    if (operand.value.isNotEmpty) {
       // cannot be converted
       return;
     }
 
-    final number = double.parse(number1);
-    setState(() {
-      number1 = "${(number / 100)}";
-      operand = "";
-      number2 = "";
-    });
+    final number = double.parse(number1.value);
+    number1.value = "${(number / 100)}";
+    operand.value = "";
+    number2.value = "";
   }
 
   // ##############
   // clears all output
-  void clearAll() {
-    setState(() {
-      number1 = "";
-      operand = "";
-      number2 = "";
-    });
+  void clearAll(ValueNotifier<String> number1, ValueNotifier<String> operand,
+      ValueNotifier<String> number2) {
+    number1.value = "";
+    operand.value = "";
+    number2.value = "";
   }
 
   // ##############
   // delete one from the end
-  void delete() {
-    if (number2.isNotEmpty) {
+  void delete(ValueNotifier<String> number1, ValueNotifier<String> operand,
+      ValueNotifier<String> number2) {
+    if (number2.value.isNotEmpty) {
       // 12323 => 1232
-      number2 = number2.substring(0, number2.length - 1);
-    } else if (operand.isNotEmpty) {
-      operand = "";
-    } else if (number1.isNotEmpty) {
-      number1 = number1.substring(0, number1.length - 1);
+      number2.value = number2.value.substring(0, number2.value.length - 1);
+    } else if (operand.value.isNotEmpty) {
+      operand.value = "";
+    } else if (number1.value.isNotEmpty) {
+      number1.value = number1.value.substring(0, number1.value.length - 1);
     }
-
-    setState(() {});
   }
 
   // #############
   // appends value to the end
-  void appendValue(String value) {
+  void appendValue(String value, ValueNotifier<String> number1,
+      ValueNotifier<String> operand, ValueNotifier<String> number2) {
     // number1 opernad number2
     // 234       +      5343
 
     // if is operand and not "."
     if (value != Btn.dot && int.tryParse(value) == null) {
       // operand pressed
-      if (operand.isNotEmpty && number2.isNotEmpty) {
-        // TODO calculate the equation before assigning new operand
-        calculate();
+      if (operand.value.isNotEmpty && number2.value.isNotEmpty) {
+        calculate(number1, operand, number2);
       }
-      operand = value;
+      operand.value = value;
     }
     // assign value to number1 variable
-    else if (number1.isEmpty || operand.isEmpty) {
+    else if (number1.value.isEmpty || operand.value.isEmpty) {
       // check if value is "." | ex: number1 = "1.2"
-      if (value == Btn.dot && number1.contains(Btn.dot)) return;
-      if (value == Btn.dot && (number1.isEmpty || number1 == Btn.n0)) {
+      if (value == Btn.dot && number1.value.contains(Btn.dot)) return;
+      if (value == Btn.dot &&
+          (number1.value.isEmpty || number1.value == Btn.n0)) {
         // ex: number1 = "" | "0"
         value = "0.";
       }
-      number1 += value;
+      number1.value += value;
     }
     // assign value to number2 variable
-    else if (number2.isEmpty || operand.isNotEmpty) {
+    else if (number2.value.isEmpty || operand.value.isNotEmpty) {
       // check if value is "." | ex: number1 = "1.2"
-      if (value == Btn.dot && number2.contains(Btn.dot)) return;
-      if (value == Btn.dot && (number2.isEmpty || number2 == Btn.n0)) {
+      if (value == Btn.dot && number2.value.contains(Btn.dot)) return;
+      if (value == Btn.dot &&
+          (number2.value.isEmpty || number2.value == Btn.n0)) {
         // number1 = "" | "0"
         value = "0.";
       }
-      number2 += value;
+      number2.value += value;
     }
-
-    setState(() {});
   }
 
   // ########
