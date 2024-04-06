@@ -89,6 +89,7 @@ class CalculatorScreen extends HookWidget {
   // ########
   void onBtnTap(String value, ValueNotifier<String> number1,
       ValueNotifier<String> operand, ValueNotifier<String> number2) {
+    // decide what to do based on the value
     if (value == Btn.del) {
       delete(number1, operand, number2);
       return;
@@ -120,11 +121,13 @@ class CalculatorScreen extends HookWidget {
     if (operand.value.isEmpty) return;
     if (number2.value.isEmpty) return;
 
+    // convert to double
     final double num1 = double.parse(number1.value);
     final double num2 = double.parse(number2.value);
 
     var result = 0.0;
     switch (operand.value) {
+      // calculate based on the operand
       case Btn.add:
         result = num1 + num2;
         break;
@@ -142,6 +145,7 @@ class CalculatorScreen extends HookWidget {
 
     number1.value = result.toStringAsPrecision(3);
 
+    // remove ".0" from the end
     if (number1.value.endsWith(".0")) {
       number1.value = number1.value.substring(0, number1.value.length - 2);
     }
