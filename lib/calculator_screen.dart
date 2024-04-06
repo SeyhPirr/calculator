@@ -8,7 +8,7 @@ class CalculatorScreen extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final number1 = useState("");
-    final operand = useState("");
+    final operator = useState("");
     final number2 = useState("");
     final screenSize = MediaQuery.of(context).size;
     return Scaffold(
@@ -24,9 +24,9 @@ class CalculatorScreen extends HookWidget {
                   alignment: Alignment.bottomRight,
                   padding: const EdgeInsets.all(16),
                   child: Text(
-                    "${number1.value}${operand.value}${number2.value}".isEmpty
+                    "${number1.value}${operator.value}${number2.value}".isEmpty
                         ? "0"
-                        : "${number1.value}${operand.value}${number2.value}",
+                        : "${number1.value}${operator.value}${number2.value}",
                     style: const TextStyle(
                       fontSize: 48,
                       fontWeight: FontWeight.bold,
@@ -45,7 +45,7 @@ class CalculatorScreen extends HookWidget {
                           ? screenSize.width / 2
                           : (screenSize.width / 4),
                       height: screenSize.width / 5,
-                      child: buildButton(value, number1, operand, number2),
+                      child: buildButton(value, number1, operator, number2),
                     ),
                   )
                   .toList(),
@@ -56,8 +56,9 @@ class CalculatorScreen extends HookWidget {
     );
   }
 
+  //butonlari olusturur.
   Widget buildButton(value, ValueNotifier<String> number1,
-      ValueNotifier<String> operand, ValueNotifier<String> number2) {
+      ValueNotifier<String> operator, ValueNotifier<String> number2) {
     return Padding(
       padding: const EdgeInsets.all(4.0),
       child: Material(
@@ -70,7 +71,7 @@ class CalculatorScreen extends HookWidget {
           borderRadius: BorderRadius.circular(100),
         ),
         child: InkWell(
-          onTap: () => onBtnTap(value, number1, operand, number2),
+          onTap: () => onBtnTap(value, number1, operator, number2),
           child: Center(
             child: Text(
               value,
@@ -85,39 +86,38 @@ class CalculatorScreen extends HookWidget {
     );
   }
 
-  // ########
+  // butona tiklandiginda yapilacak islemleri belirler.
   void onBtnTap(String value, ValueNotifier<String> number1,
-      ValueNotifier<String> operand, ValueNotifier<String> number2) {
+      ValueNotifier<String> operator, ValueNotifier<String> number2) {
     // value'nun ne olduguna gore islem yap.
     if (value == Btn.del) {
-      delete(number1, operand, number2);
+      delete(number1, operator, number2);
       return;
     }
 
     if (value == Btn.clr) {
-      clearAll(number1, operand, number2);
+      clearAll(number1, operator, number2);
       return;
     }
 
     if (value == Btn.per) {
-      convertToPercentage(number1, operand, number2);
+      convertToPercentage(number1, operator, number2);
       return;
     }
 
     if (value == Btn.calculate) {
-      calculate(number1, operand, number2);
+      calculate(number1, operator, number2);
       return;
     }
 
-    appendValue(value, number1, operand, number2);
+    appendValue(value, number1, operator, number2);
   }
 
-  // ##############
-  // calculates the result
-  void calculate(ValueNotifier<String> number1, ValueNotifier<String> operand,
+  // sonucu hesaplar ve number1'e atar.
+  void calculate(ValueNotifier<String> number1, ValueNotifier<String> operator,
       ValueNotifier<String> number2) {
     if (number1.value.isEmpty) return;
-    if (operand.value.isEmpty) return;
+    if (operator.value.isEmpty) return;
     if (number2.value.isEmpty) return;
 
     // String'den double'a cevir.
@@ -125,7 +125,7 @@ class CalculatorScreen extends HookWidget {
     final double num2 = double.parse(number2.value);
 
     var result = 0.0;
-    switch (operand.value) {
+    switch (operator.value) {
       // operatorlere gore islem yap.
       case Btn.add:
         result = num1 + num2;
@@ -144,75 +144,75 @@ class CalculatorScreen extends HookWidget {
 
     // sonucu String'e cevir.
     number1.value = result.toStringAsPrecision(3);
-
     // eger tam sayi ise .0'ı sil.
     if (number1.value.endsWith(".0")) {
       number1.value = number1.value.substring(0, number1.value.length - 2);
     }
 
-    operand.value = "";
+    operator.value = "";
     number2.value = "";
   }
 
   // degerleri yuzdeye cevirir.
   void convertToPercentage(ValueNotifier<String> number1,
-      ValueNotifier<String> operand, ValueNotifier<String> number2) {
+      ValueNotifier<String> operator, ValueNotifier<String> number2) {
     // ornek: 434+324
     if (number1.value.isNotEmpty &&
-        operand.value.isNotEmpty &&
+        operator.value.isNotEmpty &&
         number2.value.isNotEmpty) {
       // cevirme islemi yapmadan once hesap yap.
-      calculate(number1, operand, number2);
+      calculate(number1, operator, number2);
     }
 
-    if (operand.value.isNotEmpty) {
+    if (operator.value.isNotEmpty) {
       // bu durumda cevirme yapamayiz.
       return;
     }
 
     final number = double.parse(number1.value);
     number1.value = "${(number / 100)}";
-    operand.value = "";
+    operator.value = "";
     number2.value = "";
   }
 
   // butun degerleri temizler.
-  void clearAll(ValueNotifier<String> number1, ValueNotifier<String> operand,
+  void clearAll(ValueNotifier<String> number1, ValueNotifier<String> operator,
       ValueNotifier<String> number2) {
     number1.value = "";
-    operand.value = "";
+    operator.value = "";
     number2.value = "";
   }
 
   // son eklenen degeri siler.
-  void delete(ValueNotifier<String> number1, ValueNotifier<String> operand,
+  void delete(ValueNotifier<String> number1, ValueNotifier<String> operator,
       ValueNotifier<String> number2) {
     if (number2.value.isNotEmpty) {
       // 12323 => 1232
       number2.value = number2.value.substring(0, number2.value.length - 1);
-    } else if (operand.value.isNotEmpty) {
-      operand.value = "";
+    } else if (operator.value.isNotEmpty) {
+      operator.value = "";
     } else if (number1.value.isNotEmpty) {
       number1.value = number1.value.substring(0, number1.value.length - 1);
     }
   }
 
   // sona deger ekler.
+  //ornek: eger 12 ise suanda ve 3'e basarsak 123 olacak.
   void appendValue(String value, ValueNotifier<String> number1,
-      ValueNotifier<String> operand, ValueNotifier<String> number2) {
+      ValueNotifier<String> operator, ValueNotifier<String> number2) {
     // number1 operator number2
     // 234       +      5343
 
     // eger bir operator ise ve deger sayi degilse.
     if (value != Btn.dot && int.tryParse(value) == null) {
       // operator basilmis.
-      if (operand.value.isNotEmpty && number2.value.isNotEmpty) {
-        calculate(number1, operand, number2);
+      if (operator.value.isNotEmpty && number2.value.isNotEmpty) {
+        calculate(number1, operator, number2);
       }
-      operand.value = value;
+      operator.value = value;
     }
     // value'u number1'e ata.
-    else if (number1.value.isEmpty || operand.value.isEmpty) {
+    else if (number1.value.isEmpty || operator.value.isEmpty) {
       // eger deger "." ise ve number1'de "." varsa.
       if (value == Btn.dot && number1.value.contains(Btn.dot)) return;
       if (value == Btn.dot &&
@@ -223,7 +223,7 @@ class CalculatorScreen extends HookWidget {
       number1.value += value;
     }
     // value'u number2'ye ata.
-    else if (number2.value.isEmpty || operand.value.isNotEmpty) {
+    else if (number2.value.isEmpty || operator.value.isNotEmpty) {
       // eger deger "." ise ve number2'de "." varsa.
       if (value == Btn.dot && number2.value.contains(Btn.dot)) return;
       if (value == Btn.dot &&
@@ -235,7 +235,7 @@ class CalculatorScreen extends HookWidget {
     }
   }
 
-  // ########
+  // butonun tipine gore rengini belirler.
   Color getBtnColor(value) {
     return [Btn.del, Btn.clr].contains(value)
         ? Colors.blueGrey
