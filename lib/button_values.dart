@@ -20,6 +20,7 @@ class Btn {
   static const String n8 = "8";
   static const String n9 = "9";
 
+  //bunlari ekranda gozukecek butonlari tanimlamak icin kullaniyoruz.
   static const List<String> buttonValues = [
     del,
     clr,

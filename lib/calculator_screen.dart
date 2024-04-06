@@ -16,7 +16,7 @@ class CalculatorScreen extends HookWidget {
         bottom: false,
         child: Column(
           children: [
-            // output
+            //sonuc kismi.
             Expanded(
               child: SingleChildScrollView(
                 reverse: true,
@@ -36,8 +36,7 @@ class CalculatorScreen extends HookWidget {
                 ),
               ),
             ),
-
-            // buttons
+            //butonlarin oldugu kisim.
             Wrap(
               children: Btn.buttonValues
                   .map(
@@ -89,7 +88,7 @@ class CalculatorScreen extends HookWidget {
   // ########
   void onBtnTap(String value, ValueNotifier<String> number1,
       ValueNotifier<String> operand, ValueNotifier<String> number2) {
-    // decide what to do based on the value
+    // value'nun ne olduguna gore islem yap.
     if (value == Btn.del) {
       delete(number1, operand, number2);
       return;
@@ -121,13 +120,13 @@ class CalculatorScreen extends HookWidget {
     if (operand.value.isEmpty) return;
     if (number2.value.isEmpty) return;
 
-    // convert to double
+    // String'den double'a cevir.
     final double num1 = double.parse(number1.value);
     final double num2 = double.parse(number2.value);
 
     var result = 0.0;
     switch (operand.value) {
-      // calculate based on the operand
+      // operatorlere gore islem yap.
       case Btn.add:
         result = num1 + num2;
         break;
@@ -143,9 +142,10 @@ class CalculatorScreen extends HookWidget {
       default:
     }
 
+    // sonucu String'e cevir.
     number1.value = result.toStringAsPrecision(3);
 
-    // remove ".0" from the end
+    // eger tam sayi ise .0'ı sil.
     if (number1.value.endsWith(".0")) {
       number1.value = number1.value.substring(0, number1.value.length - 2);
     }
@@ -154,20 +154,19 @@ class CalculatorScreen extends HookWidget {
     number2.value = "";
   }
 
-  // ##############
-  // converts output to %
+  // degerleri yuzdeye cevirir.
   void convertToPercentage(ValueNotifier<String> number1,
       ValueNotifier<String> operand, ValueNotifier<String> number2) {
-    // ex: 434+324
+    // ornek: 434+324
     if (number1.value.isNotEmpty &&
         operand.value.isNotEmpty &&
         number2.value.isNotEmpty) {
-      // calculate before conversion
+      // cevirme islemi yapmadan once hesap yap.
       calculate(number1, operand, number2);
     }
 
     if (operand.value.isNotEmpty) {
-      // cannot be converted
+      // bu durumda cevirme yapamayiz.
       return;
     }
 
@@ -177,8 +176,7 @@ class CalculatorScreen extends HookWidget {
     number2.value = "";
   }
 
-  // ##############
-  // clears all output
+  // butun degerleri temizler.
   void clearAll(ValueNotifier<String> number1, ValueNotifier<String> operand,
       ValueNotifier<String> number2) {
     number1.value = "";
@@ -186,8 +184,7 @@ class CalculatorScreen extends HookWidget {
     number2.value = "";
   }
 
-  // ##############
-  // delete one from the end
+  // son eklenen degeri siler.
   void delete(ValueNotifier<String> number1, ValueNotifier<String> operand,
       ValueNotifier<String> number2) {
     if (number2.value.isNotEmpty) {
@@ -200,35 +197,34 @@ class CalculatorScreen extends HookWidget {
     }
   }
 
-  // #############
-  // appends value to the end
+  // sona deger ekler.
   void appendValue(String value, ValueNotifier<String> number1,
       ValueNotifier<String> operand, ValueNotifier<String> number2) {
-    // number1 opernad number2
+    // number1 operator number2
     // 234       +      5343
 
-    // if is operand and not "."
+    // eger bir operator ise ve deger sayi degilse.
     if (value != Btn.dot && int.tryParse(value) == null) {
-      // operand pressed
+      // operator basilmis.
       if (operand.value.isNotEmpty && number2.value.isNotEmpty) {
         calculate(number1, operand, number2);
       }
       operand.value = value;
     }
-    // assign value to number1 variable
+    // value'u number1'e ata.
     else if (number1.value.isEmpty || operand.value.isEmpty) {
-      // check if value is "." | ex: number1 = "1.2"
+      // eger deger "." ise ve number1'de "." varsa.
       if (value == Btn.dot && number1.value.contains(Btn.dot)) return;
       if (value == Btn.dot &&
           (number1.value.isEmpty || number1.value == Btn.n0)) {
-        // ex: number1 = "" | "0"
+        // ornek: number1 = "" | "0"
         value = "0.";
       }
       number1.value += value;
     }
-    // assign value to number2 variable
+    // value'u number2'ye ata.
     else if (number2.value.isEmpty || operand.value.isNotEmpty) {
-      // check if value is "." | ex: number1 = "1.2"
+      // eger deger "." ise ve number2'de "." varsa.
       if (value == Btn.dot && number2.value.contains(Btn.dot)) return;
       if (value == Btn.dot &&
           (number2.value.isEmpty || number2.value == Btn.n0)) {
